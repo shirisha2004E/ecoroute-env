@@ -1,3 +1,12 @@
+---
+title: EcoRoute Environment
+emoji: 🚚
+colorFrom: green
+colorTo: blue
+sdk: docker
+app_port: 7860
+---
+
 # 🌿 EcoRoute Environment
 
 A realistic, real-world delivery route optimization environment for AI agents, built with OpenEnv specification.
@@ -27,4 +36,4 @@ Each task produces a normalized score between 0.0 and 1.0 based on:
 ### Local Development
 ```bash
 pip install -r requirements.txt
-uvicorn server.app:app --reload"# EcoRoute Environment" 
+uvicorn server.app:app --reload
