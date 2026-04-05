@@ -1,4 +1,3 @@
-"""FastAPI Server for EcoRoute Environment"""
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -99,3 +98,11 @@ async def list_tasks():
             "deadline_minutes": 75
         }
     }
+
+# ========== ADD THIS AT THE BOTTOM ==========
+def main():
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
+
+if __name__ == "__main__":
+    main()
