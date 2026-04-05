@@ -1,0 +1,43 @@
+name: ecoroute-env
+version: 2.0.0
+description: Eco-friendly delivery route optimization environment with time windows, traffic, and weather conditions
+
+tasks:
+  - id: easy
+    description: Deliver 1 package to a single location
+    max_steps: 15
+    expected_min_score: 0.6
+    
+  - id: medium
+    description: Deliver 3 packages while avoiding traffic and managing fuel
+    max_steps: 25
+    expected_min_score: 0.5
+    
+  - id: hard
+    description: Deliver 4 packages with strict time windows, traffic, and eco-score optimization
+    max_steps: 35
+    expected_min_score: 0.4
+
+observation_space:
+  - current_location: integer (0-4)
+  - current_fuel_level: float (0-1)
+  - packages_delivered: list of integers
+  - remaining_packages: list of integers
+  - packages_with_deadlines: dict
+  - fuel_used: float
+  - time_elapsed: float
+  - weather: string (clear/rain/traffic)
+  - traffic_level: float (0-1)
+
+action_space:
+  - next_location_id: integer (-1 to 4)
+  - charge_vehicle: boolean (optional)
+
+reward_structure:
+  - fuel_efficiency: +0.5 per efficient move
+  - delivery_base: +20.0 per package
+  - on_time_bonus: +10.0 for early delivery
+  - completion_bonus: +30.0 for all deliveries
+  - late_penalty: -15.0 per late delivery
+  - out_of_fuel: -20.0
+  - invalid_move: -5.0
