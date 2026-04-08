@@ -58,11 +58,8 @@ class GreedyBaselineAgent:
         current = observation.get("current_location", 0)
         
         if remaining:
-            # Go to nearest remaining package
-            # In real implementation, you'd calculate distances
             return {"next_location_id": remaining[0]}
         
-        # If no packages left, go to warehouse
         return {"next_location_id": 0}
 
 class SmartHeuristicAgent:
@@ -80,31 +77,25 @@ class SmartHeuristicAgent:
         if not remaining:
             return {"next_location_id": 0}
         
-        # Score each possible destination
         best_action = None
         best_score = -float('inf')
-        
-        # Consider all legal actions
         legal_actions = observation.get("legal_actions", remaining + [0])
         
         for action in legal_actions:
             score = 0
             
             if action in remaining:
-                # Priority for urgent deadlines
                 urgency = deadlines.get(action, 999)
                 if urgency < 10:
-                    score += 100  # Very urgent!
+                    score += 100
                 elif urgency < 30:
                     score += 50
                 else:
                     score += 30
                 
-                # Small bonus for closer packages
                 if action == remaining[0]:
                     score += 10
             elif action == 0:
-                # Return to warehouse for charging if fuel low
                 if fuel_level < 0.3:
                     score += 40
                 else:
@@ -116,6 +107,7 @@ class SmartHeuristicAgent:
         
         return {"next_location_id": best_action if best_action is not None else 0}
 
+# ========== MAIN BASELINE FUNCTION ==========
 async def run_baseline(env_url: str = "http://localhost:8000", task: str = "easy", agent_type: str = "smart"):
     """Run baseline agent and return score"""
     
@@ -128,8 +120,8 @@ async def run_baseline(env_url: str = "http://localhost:8000", task: str = "easy
         agent = SmartHeuristicAgent()
     
     async with httpx.AsyncClient(timeout=30.0) as client:
-        # Reset environment
-        reset_response = await client.post(f"{env_url}/reset", json={"task_level": task})
+        # Reset environment - FIXED: use params= instead of json=
+        reset_response = await client.post(f"{env_url}/reset", params={"task_level": task})
         reset_data = reset_response.json()
         
         step_num = 0
