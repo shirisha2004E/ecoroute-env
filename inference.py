@@ -3,7 +3,6 @@ import asyncio
 import json
 import sys
 import os
-import random
 from datetime import datetime
 from typing import Dict, Any
 import httpx
@@ -55,7 +54,6 @@ class GreedyBaselineAgent:
     
     def get_action(self, observation: Dict) -> Dict:
         remaining = observation.get("remaining_packages", [])
-        current = observation.get("current_location", 0)
         
         if remaining:
             return {"next_location_id": remaining[0]}
@@ -70,7 +68,6 @@ class SmartHeuristicAgent:
     
     def get_action(self, observation: Dict) -> Dict:
         remaining = observation.get("remaining_packages", [])
-        current = observation.get("current_location", 0)
         deadlines = observation.get("packages_with_deadlines", {})
         fuel_level = observation.get("current_fuel_level", 1.0)
         
@@ -108,8 +105,12 @@ class SmartHeuristicAgent:
         return {"next_location_id": best_action if best_action is not None else 0}
 
 # ========== MAIN BASELINE FUNCTION ==========
-async def run_baseline(env_url: str = "http://localhost:8000", task: str = "easy", agent_type: str = "smart"):
+async def run_baseline(env_url: str = None, task: str = "easy", agent_type: str = "smart"):
     """Run baseline agent and return score"""
+    
+    # Use your Space URL - THIS IS THE FIX!
+    if env_url is None:
+        env_url = "https://EShirisha630-ecorouteenv.hf.space"
     
     log_start("ecoroute-env", task)
     
@@ -120,7 +121,7 @@ async def run_baseline(env_url: str = "http://localhost:8000", task: str = "easy
         agent = SmartHeuristicAgent()
     
     async with httpx.AsyncClient(timeout=30.0) as client:
-        # Reset environment - FIXED: use params= instead of json=
+        # Reset environment - using params= (not json=)
         reset_response = await client.post(f"{env_url}/reset", params={"task_level": task})
         reset_data = reset_response.json()
         
@@ -164,12 +165,15 @@ async def run_all_tasks():
     """Run baseline on all three tasks"""
     results = {}
     
+    # Your Space URL
+    space_url = "https://EShirisha630-ecorouteenv.hf.space"
+    
     for task in ["easy", "medium", "hard"]:
         print(f"\n{'='*50}")
         print(f"Running {task.upper()} task...")
         print(f"{'='*50}\n")
         
-        result = await run_baseline(task=task, agent_type="smart")
+        result = await run_baseline(env_url=space_url, task=task, agent_type="smart")
         results[task] = result
         
         print(f"\n✅ {task.upper()} - Score: {result['final_score']:.4f}, Reward: {result['total_reward']:.2f}\n")
@@ -187,7 +191,7 @@ async def run_all_tasks():
     return results
 
 if __name__ == "__main__":
-    # Run all tasks by default
+    # Run all tasks
     results = asyncio.run(run_all_tasks())
     
     # Exit with success code
