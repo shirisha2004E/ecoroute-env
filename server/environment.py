@@ -219,13 +219,14 @@ class EcoRouteEnvironment:
     
     def state(self) -> EcoRouteState:
         """Return full state with metrics"""
-        # Calculate final score (0.0 to 1.0 normalized)
+        # Calculate final score (strictly between 0 and 1)
         max_possible_score = len(self.packages) * 30.0 + 50.0
         raw_score = self.total_reward + 50.0  # Base score
-        normalized_score = max(0.0, min(1.0, raw_score / max_possible_score))
+        # This ensures score is never 0.0 or 1.0 (required by hackathon)
+        normalized_score = max(0.01, min(0.99, raw_score / max_possible_score))
         
         # Calculate delivery success rate
-        delivery_success_rate = len(self.delivered) / len(self.packages) if self.packages else 1.0
+        delivery_success_rate = len(self.delivered) / len(self.packages) if self.packages else 0.99
         
         # On-time delivery rate
         on_time_rate = len([p for p in self.delivered if self.delivery_times.get(p, 999) <= self.deadlines.get(p, 999)]) / max(1, len(self.delivered))
