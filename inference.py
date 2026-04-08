@@ -10,40 +10,16 @@ import httpx
 # ========== REQUIRED LOGGING FUNCTIONS FOR HACKATHON ==========
 def log_start(environment_name: str, task_level: str):
     """Emit START log in required format"""
-    print(json.dumps({
-        "timestamp": datetime.now().isoformat(),
-        "event": "START",
-        "environment": environment_name,
-        "task": task_level,
-        "agent": "heuristic_baseline"
-    }))
-    sys.stdout.flush()
+    print(f"[START] environment={environment_name} task={task_level}", flush=True)
 
 def log_step(step_num: int, action: Dict, reward: float, done: bool, observation: Dict):
     """Emit STEP log in required format"""
-    print(json.dumps({
-        "timestamp": datetime.now().isoformat(),
-        "event": "STEP",
-        "step": step_num,
-        "action": action,
-        "reward": round(reward, 4),
-        "done": done,
-        "current_location": observation.get("current_location"),
-        "packages_left": len(observation.get("remaining_packages", [])),
-        "fuel_level": observation.get("current_fuel_level", 0)
-    }))
-    sys.stdout.flush()
+    packages_left = len(observation.get('remaining_packages', []))
+    print(f"[STEP] step={step_num} action={action.get('next_location_id')} reward={reward:.4f} done={done} packages_left={packages_left}", flush=True)
 
 def log_end(total_reward: float, final_score: float, metrics: Dict):
     """Emit END log in required format"""
-    print(json.dumps({
-        "timestamp": datetime.now().isoformat(),
-        "event": "END",
-        "total_reward": round(total_reward, 4),
-        "score": round(final_score, 4),
-        "metrics": metrics
-    }))
-    sys.stdout.flush()
+    print(f"[END] total_reward={total_reward:.4f} score={final_score:.4f}", flush=True)
 
 # ========== ADVANCED BASELINE AGENTS ==========
 class GreedyBaselineAgent:
@@ -108,7 +84,7 @@ class SmartHeuristicAgent:
 async def run_baseline(env_url: str = None, task: str = "easy", agent_type: str = "smart"):
     """Run baseline agent and return score"""
     
-    # Use your Space URL - THIS IS THE FIX!
+    # Use your Space URL
     if env_url is None:
         env_url = "https://EShirisha630-ecorouteenv.hf.space"
     
@@ -121,7 +97,7 @@ async def run_baseline(env_url: str = None, task: str = "easy", agent_type: str 
         agent = SmartHeuristicAgent()
     
     async with httpx.AsyncClient(timeout=30.0) as client:
-        # Reset environment - using params= (not json=)
+        # Reset environment
         reset_response = await client.post(f"{env_url}/reset", params={"task_level": task})
         reset_data = reset_response.json()
         
@@ -165,7 +141,6 @@ async def run_all_tasks():
     """Run baseline on all three tasks"""
     results = {}
     
-    # Your Space URL
     space_url = "https://EShirisha630-ecorouteenv.hf.space"
     
     for task in ["easy", "medium", "hard"]:
@@ -178,12 +153,11 @@ async def run_all_tasks():
         
         print(f"\n✅ {task.upper()} - Score: {result['final_score']:.4f}, Reward: {result['total_reward']:.2f}\n")
     
-    # Summary
     print("\n" + "="*50)
     print("FINAL RESULTS SUMMARY")
     print("="*50)
     for task, result in results.items():
-        print(f"{task.upper()}: Score = {result['final_score']:.4f} | Deliveries = {result['metrics'].get('deliveries_completed', 0)}/{result['metrics'].get('total_deliveries', 0)}")
+        print(f"{task.upper()}: Score = {result['final_score']:.4f}")
     
     avg_score = sum(r['final_score'] for r in results.values()) / len(results)
     print(f"\nAverage Score: {avg_score:.4f}")
@@ -191,8 +165,5 @@ async def run_all_tasks():
     return results
 
 if __name__ == "__main__":
-    # Run all tasks
-    results = asyncio.run(run_all_tasks())
-    
-    # Exit with success code
+    asyncio.run(run_all_tasks())
     sys.exit(0)
